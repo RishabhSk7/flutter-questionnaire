@@ -15,6 +15,9 @@ dependencies:
   flutter_image_map: ^1.0.1
   flutter_localizations:
     sdk: flutter
+  path_provider: ^2.1.4
+  permission_handler: ^11.3.1
+  sqflite: ^2.3.3+1
 
 dev_dependencies:
   flutter_test:
@@ -31,4 +34,4 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
-    - assets/images/human_body.jpg
+    - assets/images/human_body.png

@@ -18,7 +18,7 @@ class _QuestionWidgetState extends State<QuestionWidget> {
     super.initState();
     // Initialize slider value if it exists in the question
     _currentSliderValue =
-        widget.question.sliderValue ?? 3; // Default to 3 if null
+        widget.question.intensity ?? 3; // Default to 3 if null
   }
 
   @override
@@ -26,7 +26,7 @@ class _QuestionWidgetState extends State<QuestionWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.question.text),
+        Text(widget.question.storyText),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             trackHeight: 8.0,
@@ -59,7 +59,7 @@ class _QuestionWidgetState extends State<QuestionWidget> {
             onChanged: (double value) {
               setState(() {
                 _currentSliderValue = value;
-                widget.question.sliderValue =
+                widget.question.intensity =
                     _currentSliderValue; // Update the question with new slider value
               });
             },

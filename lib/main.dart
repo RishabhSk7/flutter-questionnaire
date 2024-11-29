@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:questionnairev2/core/database_helper.dart';
 import 'package:questionnairev2/models/emotion_model.dart';
 import 'package:questionnairev2/models/question_model.dart';
 import 'package:questionnairev2/screens/admin_page.dart';
@@ -23,7 +24,20 @@ class MyApp extends StatelessWidget {
       routes: {
         '/emotions': (context) =>
             EmotionQuestionnairePage(emotions: _loadEmotions()),
-        '/story': (context) => StoryQuestionnairePage(),
+        '/story': (context) => FutureBuilder<List<String>>(
+              future: _loadStories(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (snapshot.hasData) {
+                  return StoryQuestionnairePage(stories: snapshot.data!);
+                } else {
+                  return const Center(child: Text('No stories available.'));
+                }
+              },
+            ),
         '/thankyou': (context) => ThankYouPage(),
         '/admin': (context) => AdminPage(), // Route for Admin Page
       },
@@ -31,20 +45,27 @@ class MyApp extends StatelessWidget {
   }
 }
 
-List<Emotion> _loadEmotions() {
-  return [
-    Emotion(name: "Happy", questions: [
-      Question(
-          text: "How intense is your happiness?",
-          options: ["1", "2", "3", "4", "5"]),
-      // Add more questions for "Happy" here
-    ]),
-    Emotion(name: "Sad", questions: [
-      Question(
-          text: "How intense is your sadness?",
-          options: ["1", "2", "3", "4", "5"]),
-      // Add more questions for "Sad" here
-    ]),
-    // Add more emotions and their questions
+List<String> _loadEmotions() {
+  List<String> emotions = [
+    "happy",
+    "sad",
+    "fear",
+    "anger",
+    "surprise",
+    "disgust"
   ];
+  emotions.shuffle();
+  return emotions;
+}
+
+Future<List<String>> _loadStories() {
+  return DatabaseHelper.instance.getQuestions().then((questionList) {
+    if (questionList.isEmpty) {
+      return <String>[];
+    }
+    List<String> stories =
+        questionList.map((q) => q['question'] as String).toList();
+    stories.shuffle();
+    return stories;
+  });
 }

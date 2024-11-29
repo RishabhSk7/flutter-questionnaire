@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class EmotionCard extends StatefulWidget {
-  final String emotion;
+  final String? emotion;
+  final Function updatePosition;
 
-  EmotionCard({required this.emotion});
+  EmotionCard({required this.emotion, required this.updatePosition});
 
   @override
   _EmotionCardState createState() => _EmotionCardState();
@@ -13,23 +14,21 @@ class _EmotionCardState extends State<EmotionCard> {
   Offset? lastTappedPosition;
 
   void handleTap(Offset position) {
+    widget.updatePosition(position);
     setState(() {
       lastTappedPosition = position;
     });
-    print("Tapped position for ${widget.emotion}: $position");
+    // print("Tapped position for ${widget.emotion}: $position");
   }
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
     return Center(
       child: SizedBox(
-        width: double.infinity, // Use the maximum width available
         child: Stack(
           children: [
             Image.asset(
-              'assets/images/human_body.jpg',
-              fit: BoxFit.cover,
+              'assets/images/human_body.png',
             ),
             Positioned.fill(
               child: GestureDetector(

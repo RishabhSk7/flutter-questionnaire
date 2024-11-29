@@ -1,74 +1,82 @@
 import 'package:flutter/material.dart';
-import 'package:questionnairev2/screens/thank_you_page.dart';
+import 'package:questionnairev2/models/question_model.dart';
+import 'package:questionnairev2/models/user_model.dart';
+import 'package:questionnairev2/widgets/human_body_widget.dart';
 
 class StoryQuestionnairePage extends StatefulWidget {
+  final List<String> stories;
+
+  StoryQuestionnairePage({required this.stories});
+
   @override
   _StoryQuestionnairePageState createState() => _StoryQuestionnairePageState();
 }
 
 class _StoryQuestionnairePageState extends State<StoryQuestionnairePage> {
-  final List<String> stories = [
-    "Someone is looking at you and smiling",
-    // Add more stories as needed
-  ];
-  String? selectedStory;
+  int currentStoryIndex = 0;
+
   String? selectedEmotion;
   double intensity = 1.0;
   String? positivity;
   Offset? clickedPosition;
 
+  late User userModel;
+
+  void updatePosition(Offset? position) {
+    setState(() {
+      clickedPosition = position;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Extract the User object from the navigator arguments
+    final userArguments = ModalRoute.of(context)?.settings.arguments as User;
+
+    // Assign the extracted user to the class variable
+    setState(() {
+      userModel = userArguments;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.stories.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Story Questionnaire'),
+        ),
+        body: Center(
+          child: Text(
+            'No stories available. Please ask admin to add some stories from the admin panel.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    final currentStory = widget.stories[currentStoryIndex];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Story Questionnaire'),
+        title: const Text("Story Questionnaire"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButton<String>(
-              hint: Text('Select Story'),
-              value: selectedStory,
-              onChanged: (value) {
-                setState(() {
-                  selectedStory = value;
-                });
-              },
-              items: stories.map((String story) {
-                return DropdownMenuItem<String>(
-                  value: story,
-                  child: Text(story),
-                );
-              }).toList(),
+            Text(
+              currentStory,
+              style: Theme.of(context).textTheme.headline6,
             ),
-            SizedBox(height: 20),
-            GestureDetector(
-              onTapDown: (details) {
-                setState(() {
-                  clickedPosition = details.localPosition;
-                });
-                // Save clicked position to a file or state as needed
-              },
-              child: Container(
-                width: 400,
-                height: 404,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
-                ),
-                child: Center(
-                  child: clickedPosition != null
-                      ? Icon(Icons.circle,
-                          size: 30, color: Colors.red) // Show where clicked
-                      : Text('Click on the body image'),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Text('What emotion do you feel?'),
+            const SizedBox(height: 20),
+            EmotionCard(emotion: currentStory, updatePosition: updatePosition),
+            const SizedBox(height: 20),
+            const Text('What emotion do you feel?'),
             DropdownButton<String>(
-              hint: Text('Select Emotion'),
+              hint: const Text('Select Emotion'),
               value: selectedEmotion,
               onChanged: (value) {
                 setState(() {
@@ -89,7 +97,7 @@ class _StoryQuestionnairePageState extends State<StoryQuestionnairePage> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text('How intensely do you feel the emotion?'),
             Slider(
               value: intensity,
@@ -103,7 +111,7 @@ class _StoryQuestionnairePageState extends State<StoryQuestionnairePage> {
                 });
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text('Is the emotion positive or negative?'),
             DropdownButton<String>(
               hint: Text('Select'),
@@ -120,35 +128,61 @@ class _StoryQuestionnairePageState extends State<StoryQuestionnairePage> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    // Navigate back to the previous page
-                    Navigator.pop(context);
-                  },
+                  onPressed: currentStoryIndex > 0
+                      ? () {
+                          setState(() {
+                            currentStoryIndex--;
+                            resetInputs();
+                          });
+                        }
+                      : null,
                   child: Text('Previous'),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // Proceed to the next page (Thank You Page)
-                    print('Story: $selectedStory');
-                    print('Clicked Position: $clickedPosition');
-                    print('Emotion: $selectedEmotion');
-                    print('Intensity: $intensity');
-                    print('Positivity: $positivity');
+                    if (!validateInputs()) return;
 
-                    // Here you can replace this with a thank you page
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              ThankYouPage()), // Replace with the actual page
-                    );
+                    userModel.questions.removeWhere(
+                        (question) => question.storyText == currentStory);
+
+                    userModel.questions.add(Question(
+                      storyText: currentStory,
+                      selectedEmotion: selectedEmotion!,
+                      intensity: intensity,
+                      emotionValence: positivity!,
+                      selectedBodyPosition: clickedPosition!,
+                    ));
+
+                    if (currentStoryIndex < widget.stories.length - 1) {
+                      setState(() {
+                        currentStoryIndex++;
+                        resetInputs();
+                      });
+                    } else {
+                      userModel.saveToFile().then((_) {
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/thankyou',
+                          ModalRoute.withName('/'),
+                          arguments: userModel,
+                        );
+                      }).catchError((error) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to save user data: $error'),
+                          ),
+                        );
+                      });
+                    }
                   },
-                  child: Text('Next'),
+                  child: Text(currentStoryIndex < widget.stories.length - 1
+                      ? 'Next'
+                      : 'Finish'),
                 ),
               ],
             ),
@@ -156,5 +190,33 @@ class _StoryQuestionnairePageState extends State<StoryQuestionnairePage> {
         ),
       ),
     );
+  }
+
+  void resetInputs() {
+    selectedEmotion = null;
+    intensity = 1.0;
+    positivity = null;
+    clickedPosition = null;
+  }
+
+  bool validateInputs() {
+    if (selectedEmotion == null) {
+      showError('Please select an emotion');
+      return false;
+    }
+    if (clickedPosition == null) {
+      showError('Please select where you feel the emotion on your body');
+      return false;
+    }
+    if (positivity == null) {
+      showError('Please select whether the emotion is positive or negative');
+      return false;
+    }
+    return true;
+  }
+
+  void showError(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }

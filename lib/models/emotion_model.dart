@@ -1,8 +1,28 @@
-import 'package:questionnairev2/models/question_model.dart';
+import 'package:flutter/services.dart';
 
 class Emotion {
-  final String name; // Name of the emotion
-  final List<Question> questions; // List of questions related to this emotion
+  String? emotion;
+  Offset? selectedBodyPosition;
+  double? intensity;
+  String? emotionValence;
 
-  Emotion({required this.name, required this.questions});
+  Emotion({
+    this.emotion,
+    this.selectedBodyPosition,
+    this.intensity,
+    this.emotionValence,
+  });
+
+  // Convert Emotion object to JSON format
+  Map<String, dynamic> toJson() {
+    return {
+      'emotion': emotion,
+      'selectedBodyPosition': [
+        selectedBodyPosition!.dx,
+        selectedBodyPosition!.dy
+      ],
+      'intensity': intensity,
+      'emotionValence': emotionValence,
+    };
+  }
 }

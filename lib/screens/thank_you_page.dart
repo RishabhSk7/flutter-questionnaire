@@ -9,7 +9,7 @@ class ThankYouPage extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          'Thank you for your responses!',
+        'Thank you for your responses!',
           style: TextStyle(fontSize: 24),
         ),
       ),

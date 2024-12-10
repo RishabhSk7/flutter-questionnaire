@@ -210,6 +210,14 @@ class _DemographicPageState extends State<DemographicPage> {
                                   gender: _genderController.text,
                                   autismSpectrum: _autismSpectrumAnswer!,
                                 ));
+                            setState(() {
+                              _nameController.clear();
+                              _ageController.clear();
+                              _genderController.clear();
+                              _educationController.clear();
+                              _autismSpectrumAnswer = null;
+                              isButtonEnabled = false;
+                            });
                           } else {
                             _showErrorDialog(
                               'Please enter a valid age between 10 and 100.',

@@ -29,7 +29,7 @@ class User {
 
   Future<void> saveToFile(BuildContext context) async {
     // Request storage permissions
-    PermissionStatus status = await Permission.manageExternalStorage.request();
+    PermissionStatus status = await Permission.manageExternalStorage. request();
 
     if (status.isGranted) {
       try {

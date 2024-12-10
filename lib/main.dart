@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:questionnairev2/core/database_helper.dart';
 import 'package:questionnairev2/models/emotion_model.dart';
 import 'package:questionnairev2/models/question_model.dart';
@@ -15,6 +16,7 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    Permission.manageExternalStorage.request();
     return MaterialApp(
       title: 'Questionnaire App',
       theme: ThemeData(

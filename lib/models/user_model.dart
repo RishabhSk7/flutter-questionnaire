@@ -27,34 +27,36 @@ class User {
         questions = questions ?? [];
 
   Future<void> saveToFile() async {
-    // Request storage permissions (if needed)
-    PermissionStatus status = await Permission.storage.request();
+    // Request storage permissions
+    PermissionStatus status = await Permission.manageExternalStorage.request();
+
     if (status.isGranted) {
-      // Get the Downloads directory
-      final directory = await getExternalStorageDirectory();
-      if (directory != null) {
-        // Create the userResponses folder in Downloads
-        final userResponsesDirectory =
-            Directory('/storage/emulated/0/Downloads/questionnaire');
-        if (!await userResponsesDirectory.exists()) {
-          await userResponsesDirectory.create(recursive: true);
+      try {
+        // Define the Downloads directory path
+        final directory =
+            Directory('/storage/emulated/0/Download/questionnaire');
+
+        // Ensure the directory exists
+        if (!(await directory.exists())) {
+          await directory.create(
+              recursive:
+                  true); // Create the Downloads directory if it doesn't exist
+          // Define the file path using the user's name and timestamp for uniqueness
+          final file = File(
+              '${directory.path}/${name}_response_${DateTime.now().millisecondsSinceEpoch}.json');
+
+          // Convert response data to JSON and write it to the file
+          String jsonString = jsonEncode(this.toJson());
+          await file.writeAsString(jsonString);
+
+          print('User response saved to: ${file.path}');
         }
-
-        // Define the file path using the user's name
-        final file = File(
-            '${userResponsesDirectory.path}/${name}_response_${DateTime.now().millisecondsSinceEpoch}.json');
-
-        // Convert the User object to JSON
-        String jsonString = jsonEncode(this.toJson());
-
-        // Write the JSON string to the file
-        await file.writeAsString(jsonString);
-        // print('User response saved to: ${file.path}');
-      } else {
-        // print('Downloads directory not found.');
+      } catch (e) {
+        print('Error saving file: $e');
+        rethrow;
       }
     } else {
-      // print('Permission denied');
+      print('Permission denied. Unable to save file.');
     }
   }
 

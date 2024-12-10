@@ -164,7 +164,7 @@ class _StoryQuestionnairePageState extends State<StoryQuestionnairePage> {
                         resetInputs();
                       });
                     } else {
-                      userModel.saveToFile().then((_) {
+                      userModel.saveToFile(context).then((_) {
                         Navigator.pushNamedAndRemoveUntil(
                           context,
                           '/thankyou',

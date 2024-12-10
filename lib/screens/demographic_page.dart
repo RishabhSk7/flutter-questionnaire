@@ -9,6 +9,9 @@ class DemographicPage extends StatefulWidget {
 class _DemographicPageState extends State<DemographicPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _educationController = TextEditingController();
+  bool? _autismSpectrumAnswer;
   bool isButtonEnabled = false;
 
   @override
@@ -41,7 +44,7 @@ class _DemographicPageState extends State<DemographicPage> {
                     content: TextField(
                       controller: pinController,
                       keyboardType: TextInputType.number,
-                      obscureText: true, // Hides the input for security
+                      obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'PIN',
                         border: OutlineInputBorder(),
@@ -57,9 +60,8 @@ class _DemographicPageState extends State<DemographicPage> {
                       TextButton(
                         onPressed: () {
                           if (pinController.text == hardcodedPin) {
-                            Navigator.pop(context); // Close the dialog
-                            Navigator.pushNamed(
-                                context, '/admin'); // Navigate to /admin
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/admin');
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -79,7 +81,7 @@ class _DemographicPageState extends State<DemographicPage> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFFF8F3FF), // Light pinkish background
+      backgroundColor: const Color(0xFFF8F3FF),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -87,7 +89,7 @@ class _DemographicPageState extends State<DemographicPage> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 10,
@@ -95,7 +97,8 @@ class _DemographicPageState extends State<DemographicPage> {
                 ),
               ],
             ),
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             width: 350,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -120,6 +123,70 @@ class _DemographicPageState extends State<DemographicPage> {
                   ),
                   onChanged: _validateInputs,
                 ),
+                SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _genderController.text.isEmpty
+                      ? null
+                      : _genderController.text,
+                  items: const [
+                    DropdownMenuItem<String>(
+                      value: 'Male',
+                      child: Text('Male'),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: 'Female',
+                      child: Text('Female'),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: 'Other',
+                      child: Text('Other'),
+                    ),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Gender',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _genderController.text = newValue ?? '';
+                    });
+                    _validateInputs('');
+                  },
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: _educationController,
+                  decoration: InputDecoration(
+                    labelText: 'Education',
+                    labelStyle: TextStyle(color: Colors.grey[700]),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: _validateInputs,
+                ),
+                SizedBox(height: 16),
+                DropdownButtonFormField<bool>(
+                  value: _autismSpectrumAnswer,
+                  items: const [
+                    DropdownMenuItem<bool>(
+                      value: true,
+                      child: Text('Yes'),
+                    ),
+                    DropdownMenuItem<bool>(
+                      value: false,
+                      child: Text('No'),
+                    ),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Do you lie in the autism spectrum?',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (bool? newValue) {
+                    setState(() {
+                      _autismSpectrumAnswer = newValue;
+                    });
+                    _validateInputs('');
+                  },
+                ),
                 SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -135,14 +202,14 @@ class _DemographicPageState extends State<DemographicPage> {
                       ? () {
                           final age = int.tryParse(_ageController.text);
                           if (age != null && age >= 10 && age <= 100) {
-                            Navigator.pushNamed(
-                              context,
-                              "/emotions",
-                              arguments: User(
-                                name: _nameController.text,
-                                age: age,
-                              ),
-                            );
+                            Navigator.pushNamed(context, "/emotions",
+                                arguments: User(
+                                  name: _nameController.text,
+                                  age: age,
+                                  education: _educationController.text,
+                                  gender: _genderController.text,
+                                  autismSpectrum: _autismSpectrumAnswer!,
+                                ));
                           } else {
                             _showErrorDialog(
                               'Please enter a valid age between 10 and 100.',
@@ -179,9 +246,16 @@ class _DemographicPageState extends State<DemographicPage> {
     final isAgeValid = int.tryParse(_ageController.text) != null &&
         int.parse(_ageController.text) >= 10 &&
         int.parse(_ageController.text) <= 100;
+    final isGenderValid = _genderController.text.isNotEmpty;
+    final isEducationValid = _educationController.text.isNotEmpty;
+    final isAutismSpectrumValid = _autismSpectrumAnswer != null;
 
     setState(() {
-      isButtonEnabled = isNameValid && isAgeValid;
+      isButtonEnabled = isNameValid &&
+          isAgeValid &&
+          isGenderValid &&
+          isEducationValid &&
+          isAutismSpectrumValid;
     });
   }
 

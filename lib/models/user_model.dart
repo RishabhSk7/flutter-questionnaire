@@ -9,12 +9,18 @@ import 'package:questionnairev2/models/question_model.dart';
 class User {
   final String name;
   final int age;
+  final String gender;
+  final String education;
+  final bool autismSpectrum;
   List<Emotion> emotions;
   List<Question> questions;
 
   User({
     required this.name,
     required this.age,
+    required this.education,
+    required this.gender,
+    required this.autismSpectrum,
     List<Emotion>? emotions,
     List<Question>? questions,
   })  : emotions = emotions ?? [],
@@ -29,14 +35,14 @@ class User {
       if (directory != null) {
         // Create the userResponses folder in Downloads
         final userResponsesDirectory =
-            Directory('/storage/emulated/0/Download');
+            Directory('/storage/emulated/0/Downloads/questionnaire');
         if (!await userResponsesDirectory.exists()) {
           await userResponsesDirectory.create(recursive: true);
         }
 
         // Define the file path using the user's name
         final file = File(
-            '${userResponsesDirectory.path}/questionnaire/${name}_response_${DateTime.now().millisecondsSinceEpoch}.json');
+            '${userResponsesDirectory.path}/${name}_response_${DateTime.now().millisecondsSinceEpoch}.json');
 
         // Convert the User object to JSON
         String jsonString = jsonEncode(this.toJson());
@@ -57,6 +63,9 @@ class User {
     return {
       'name': name,
       'age': age,
+      'gender': gender,
+      'autismSpectrum': autismSpectrum,
+      'education': education,
       'emotions': emotions.map((e) => e.toJson()).toList(),
       'questions': questions.map((q) => q.toJson()).toList(),
     };
